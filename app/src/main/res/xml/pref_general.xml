@@ -1,0 +1,31 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <EditTextPreference
+        android:capitalize="words"
+        android:defaultValue="@string/pref_default_user_wallet_address"
+        android:inputType="textCapWords"
+        android:key="user_wallet_address"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/pref_title_user_wallet_address" />
+
+    <ListPreference
+        android:defaultValue="technicals"
+        android:entries="@array/pref_pool_list_names"
+        android:entryValues="@array/pref_pool_list_values"
+        android:key="pool_list"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="@string/pref_title_select_pool" />
+
+    <ListPreference
+        android:defaultValue="rainforest"
+        android:entries="@array/pref_algorithm_list_names"
+        android:entryValues="@array/pref_algorithm_list_values"
+        android:key="pow_algorithm"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="@string/pref_title_pow_algorithm" />
+
+</PreferenceScreen>

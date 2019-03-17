@@ -1,0 +1,15 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <EditTextPreference
+        android:selectable="false"
+        android:editable="false"
+        android:capitalize="words"
+        android:inputType="textCapWords"
+        android:key="about_app_version"
+        android:maxLines="1"
+        android:selectAllOnFocus="false"
+        android:singleLine="true"
+        android:title="@string/pref_about_version_title"
+        android:summary="@string/pref_about_version_summary"/>
+
+</PreferenceScreen>
