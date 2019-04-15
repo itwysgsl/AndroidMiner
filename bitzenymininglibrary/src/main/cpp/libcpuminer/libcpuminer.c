@@ -1089,7 +1089,7 @@ static void *miner_thread(void *userdata)
 		if (max64 <= 0) {
 			switch (opt_algo) {
 			case ALGO_RAINFOREST:
-				max64 = 0x1fffff;
+				max64 = 0x1ff;
 				break;
 			case ALGO_SHA256D:
 				max64 = 0x1fffff;

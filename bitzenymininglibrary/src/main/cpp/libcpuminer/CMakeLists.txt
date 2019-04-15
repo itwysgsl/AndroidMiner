@@ -21,6 +21,7 @@ add_library(
     sha2-x86-notextrel.S
     util.c
     rainforest.c
+    rfv2_core.c
     libcpuminer.c
 )
 
