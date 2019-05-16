@@ -42,5 +42,6 @@
 int rfv2_hash(void *out, const void *in, size_t len, void *rambox, const void *rambox_template);
 int rfv2_hash2(void *out, const void *in, size_t len, void *rambox, const void *rambox_template, uint32_t seed);
 void rfv2_raminit(void *area);
+int rfv2_scan_hdr(char *msg, void *rambox, uint32_t *hash, uint32_t target, uint32_t min, uint32_t max, volatile char *stop);
 
 #endif

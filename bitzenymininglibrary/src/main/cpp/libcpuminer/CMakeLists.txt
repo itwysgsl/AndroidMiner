@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.4.1)
 
 enable_language(ASM)
 
-set(CMAKE_ASM_FLAGS "-g -O2")
-set(CMAKE_C_FLAGS " ${CMAKE_C_FLAGS} -g -O2")
+set(CMAKE_ASM_FLAGS "-g -O3")
+set(CMAKE_C_FLAGS " ${CMAKE_C_FLAGS} -g -O3")
 
 add_definitions(
     -D__STDC_LIMIT_MACROS

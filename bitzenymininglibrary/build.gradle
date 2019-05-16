@@ -12,6 +12,7 @@ android {
             cmake {
                 cppFlags "-fexceptions"
                 arguments "-DTARGET=STANDARD"
+                abiFilters "armeabi-v7a"
             }
         }
     }

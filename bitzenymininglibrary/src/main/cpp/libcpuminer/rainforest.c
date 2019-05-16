@@ -4,8 +4,10 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "rfv2.h"
+#include "portable_endian.h"
 
 #include <stdbool.h>
 // struct work_restart {
@@ -28,35 +30,62 @@ int scanhash_rainforest(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	uint32_t hash[8] __attribute__((aligned(64)));
 	uint32_t n = pdata[19];
 	const uint32_t first_nonce = pdata[19];
-	void *rambox;
 
-	for (int i = 0; i < 20; i++) {
+	volatile uint8_t *restart = &(work_restart[thr_id].restart);
+	uint32_t Htarg = ptarget[7];
+	static void *rambox;
+	int ret = 0;
+
+	for (int i = 0; i < 19; i++) {
 		be32enc(&data[i], pdata[i]);
 	}
 
-	rambox = malloc(RFV2_RAMBOX_SIZE * 8);
-	if (rambox == NULL)
-		goto out;
+	if (!rambox) {
+		//printf("Rambox not yet initialized\n");
+		if (!thr_id) {
+			/* only thread 0 is responsible for allocating the shared rambox */
+			void *r = malloc(RFV2_RAMBOX_SIZE * 8);
+			if (r == NULL) {
+				//printf("[%d] rambox allocation failed\n", thr_id);
+				*(volatile void **)&rambox = (void*)0x1;
+				goto out;
+			}
+			//printf("Thread %d initializing the rambox\n", thr_id);
+			rfv2_raminit(r);
+			*(volatile void **)&rambox = r;
+		} else {
+			/* wait for thread 0 to finish alloc+init of rambox */
+			while (!*(volatile void **)&rambox)
+				usleep(100000);
+		}
+	}
 
-	rfv2_raminit(rambox);
+	if (*(volatile void **)&rambox == (void*)0x1) {
+		//printf("[%d] rambox allocation failed\n", thr_id);
+		goto out; // the rambox wasn't properly initialized
+	}
 
-	do {
-		be32enc(&data[19],n);
+	do
+	{
+		ret = rfv2_scan_hdr((char *)data, rambox, hash, Htarg, n, max_nonce, restart);
+		n = be32toh(data[19]);
+		if (!ret)
+			break;
 
-		rfv2_hash(hash, (char *)data, 80, rambox, NULL);
-
-		if (pretest(hash, ptarget) && fulltest(hash, ptarget)) {
+		if (fulltest(hash, ptarget)) {
 			pdata[19] = n;
 			*hashes_done = n - first_nonce + 1;
-			return 1;
+			goto out;
+		} else {
+			printf("Warning: rfv2_scan_hdr() returned invalid solution %u\n", n);
 		}
-next:
+
 		n++;
 	} while (n < max_nonce && !work_restart[thr_id].restart);
-	
-	*hashes_done = n - first_nonce + 1;
+
 	pdata[19] = n;
+	*hashes_done = n - first_nonce + 1;
+
 out:
-	free(rambox);
-	return 0;
+	return ret;
 }

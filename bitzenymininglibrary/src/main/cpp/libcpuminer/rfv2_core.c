@@ -1,6 +1,7 @@
 // RainForest hash algorithm
 // Author: Bill Schneider
-// Date: Feb 13th, 2018
+// Created: Feb 13th, 2018
+// Updated: Apr 21th, 2019
 //
 // RainForest uses native integer operations which are extremely fast on
 // modern 64-bit processors, significantly slower on 32-bit processors such
@@ -8,22 +9,17 @@
 // It makes an intensive use of the L1 cache to maintain a heavy intermediary
 // state favoring modern CPUs compared to GPUs (small L1 cache shared by many
 // shaders) or FPGAs (very hard to implement the required low-latency cache)
-// when scanning ranges for nonces. The purpose is to create a fair balance
-// between all mining equipments, from mobile phones to extreme performance
-// GPUs and to rule out farming factories relying on ASICs and FPGAs. The
-// CRC32 instruction is used a lot as it is extremely fast on low-power ARM
-// chips and allows such devices to rival high-end PCs mining performance.
+// when scanning ranges for nonces. Finally, it uses 96 MB of work
+// area per thread in order to incur a cost to highly parallel processors such
+// as high-end GPUs. The purpose is to create a fair balance between all mining
+// equipments, from mobile phones to extreme performance GPUs and to rule out
+// farming factories relying on ASICs, FPGAs, or any other very expensive
+// solution. The CRC32 instruction is used a lot as it is extremely fast on
+// low-power ARM chips and allows such devices to rival high-end PCs mining
+// performance. Note that CRC32 is not used for security at all, only to
+// disturb data.
 //
-// Tests on various devices have shown the following performance :
-// +--------------------------------------------------------------------------+
-// | CPU/GPU       Clock Threads Full hash  Nonce scan  Watts   Cost          |
-// |               (MHz)         (80 bytes) (4 bytes)   total                 |
-// | Core i7-6700k  4000      8   390 kH/s  1642 kH/s     200  ~$350+PC       |
-// | Radeon RX560   1300   1024  1100 kH/s  1650 kH/s     300  ~$180+PC       |
-// | RK3368 (8*A53) 1416      8   534 kH/s  1582 kH/s       6   $60 (Geekbox) |
-// +--------------------------------------------------------------------------+
-//
-// Build instructions on Ubuntu 16.04 :
+// Build instructions on Ubuntu 16.04 to 18.04 :
 //   - on x86:   use gcc -march=native or -maes to enable AES-NI
 //   - on ARMv8: use gcc -march=native or -march=armv8-a+crypto+crc to enable
 //               CRC32 and AES extensions.
@@ -31,9 +27,9 @@
 // Note: always use the same options to build all files!
 //
 
-#include <math.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 #include "rfv2.h"
 
 // these archs are fine with unaligned reads
@@ -73,11 +69,7 @@ typedef __attribute__((may_alias)) uint32_t rf_u32;
 typedef __attribute__((may_alias)) uint64_t rf_u64;
 #endif
 
-#define RFV2_RAMBOX_HIST 1024
-
-// number of loops run over the initial message. At 19 loops
-// most runs are under 256 changes
-#define RFV2_LOOPS 320
+#define RFV2_RAMBOX_HIST 1536
 
 typedef union {
 	rf_u8  b[32];
@@ -90,7 +82,8 @@ typedef struct RF_ALIGN(16) rfv2_ctx {
 	uint32_t word;  // LE pending message
 	uint32_t len;   // total message length
 	uint32_t crc;
-	uint32_t changes; // must remain lower than RFV2_RAMBOX_HIST
+	uint16_t changes; // must remain lower than RFV2_RAMBOX_HIST, 65535=R/O
+	uint16_t left_bits; // adjust rambox probability
 	uint64_t *rambox;
 	uint32_t rb_o;    // rambox offset
 	uint32_t rb_l;    // rambox length
@@ -156,6 +149,12 @@ static const uint8_t rfv2_iv[32] = {
 	0x78,0xe9,0x90,0xd3,0xb3,0xc8,0x9b,0x7b,0x0a,0xc4,0x86,0x6e,0x4e,0x38,0xb3,0x6b,
 	0x33,0x68,0x7c,0xed,0x73,0x35,0x4b,0x0a,0x97,0x25,0x4c,0x77,0x7a,0xaa,0x61,0x1b
 };
+
+/* le32 memory to host representation */
+static inline uint32_t rf_le32toh(uint8_t *x)
+{
+	return x[0] + (x[1] << 8) + (x[2] << 16) + (x[3] << 24);
+}
 
 // mix the current state with the crc and return the new crc
 static inline uint32_t rf_crc32x4(rf_u32 *state, uint32_t crc)
@@ -232,7 +231,7 @@ static inline uint64_t rf_rotr64(uint64_t v, uint64_t bits)
 static inline uint64_t rf_bswap64(uint64_t v)
 {
 #if !defined(RF_NOASM) && defined(__x86_64__) && !defined(_MSC_VER)
-	__asm__("bswap %0":"+r"(v));
+	__asm__("bswapq %0":"+r"(v));
 #elif !defined(RF_NOASM) && defined(__aarch64__)
 	__asm__("rev %0,%0\n":"+r"(v));
 #else
@@ -249,11 +248,11 @@ static inline uint64_t rf_revbit64(uint64_t v)
 #if !defined(RF_NOASM) && defined(__aarch64__)
 	__asm__ volatile("rbit %0, %1\n" : "=r"(v) : "r"(v));
 #else
-	v = ((v & 0xaaaaaaaaaaaaaaaa) >> 1) | ((v & 0x5555555555555555) << 1);
-	v = ((v & 0xcccccccccccccccc) >> 2) | ((v & 0x3333333333333333) << 2);
-	v = ((v & 0xf0f0f0f0f0f0f0f0) >> 4) | ((v & 0x0f0f0f0f0f0f0f0f) << 4);
+	v = ((v & 0xaaaaaaaaaaaaaaaaULL) >> 1) | ((v & 0x5555555555555555ULL) << 1);
+	v = ((v & 0xccccccccccccccccULL) >> 2) | ((v & 0x3333333333333333ULL) << 2);
+	v = ((v & 0xf0f0f0f0f0f0f0f0ULL) >> 4) | ((v & 0x0f0f0f0f0f0f0f0fULL) << 4);
 #if !defined(RF_NOASM) && defined(__x86_64__)
-	__asm__("bswap %0" : "=r"(v) : "0"(v));
+	__asm__("bswapq %0" : "=r"(v) : "0"(v));
 #else
 	v = ((v & 0xff00ff00ff00ff00ULL) >> 8)  | ((v & 0x00ff00ff00ff00ffULL) << 8);
 	v = ((v & 0xffff0000ffff0000ULL) >> 16) | ((v & 0x0000ffff0000ffffULL) << 16);
@@ -306,7 +305,7 @@ static inline void rf_w128(uint64_t *cell, size_t ofs, uint64_t x, uint64_t y)
 
 // lookup _old_ in _rambox_, update it and perform a substitution if a matching
 // value is found.
-static inline uint32_t rfv2_rambox(rfv2_ctx_t *ctx, uint64_t old)
+static inline uint64_t rfv2_rambox(rfv2_ctx_t *ctx, uint64_t old)
 {
 	uint64_t *p, k;
 	uint32_t idx;
@@ -314,19 +313,21 @@ static inline uint32_t rfv2_rambox(rfv2_ctx_t *ctx, uint64_t old)
 	k = old;
 	old = rf_add64_crc32(old);
 	old ^= rf_revbit64(k);
-	if (__builtin_clrsbll(old) > 3) {
+	if (__builtin_clrsbll(old) >= ctx->left_bits) {
 		idx = ctx->rb_o + old % ctx->rb_l;
 		p = &ctx->rambox[idx];
 		k = *p;
 		old += rf_rotr64(k, (uint8_t)(old / ctx->rb_l));
-		*p = old;
-		if (ctx->changes < RFV2_RAMBOX_HIST) {
-			ctx->hist[ctx->changes] = idx;
-			ctx->prev[ctx->changes] = k;
-			ctx->changes++;
+		if (ctx->changes != 65535) {
+			*p = old;
+			if (ctx->changes < RFV2_RAMBOX_HIST) {
+				ctx->hist[ctx->changes] = idx;
+				ctx->prev[ctx->changes] = k;
+				ctx->changes++;
+			}
 		}
 	}
-	return (uint32_t)old;
+	return old;
 }
 
 // initialize the ram box
@@ -481,21 +482,6 @@ static void rfv2_ram_test(const void *area)
 }
 #endif
 
-// mix each word with the precision lost from the other one when converting
-// it to an IEEE754 double floating point number.
-static inline void rfv2_mix_fp_loss(uint64_t *p, uint64_t *q)
-{
-	uint64_t p0, q0;
-	uint64_t lp, lq;
-	double fp, fq;
-
-	p0 = *p;                q0 = *q;
-	fp = p0;                fq = q0;
-	lp = (uint64_t)fp ^ p0; lq = (uint64_t)fq ^ q0;
-	p0 += lq;               q0 += lp;
-	*p = p0;                *q = q0;
-}
-
 // return p/q into p and rev(rev(q)+p) into q
 static inline void rfv2_div_mod(uint64_t *p, uint64_t *q)
 {
@@ -515,7 +501,6 @@ static inline void rfv2_divbox(rf_u64 *v0, rf_u64 *v1)
 	//---- low word ----    ---- high word ----
 	pl = ~*v0;              ph = ~*v1;
 	ql = rf_bswap64(*v0);   qh = rf_bswap64(*v1);
-	rfv2_mix_fp_loss(&ql, &qh);
 
 	if (!pl || !ql)   { pl = ql = 0; }
 	else if (pl > ql) rfv2_div_mod(&pl, &ql);
@@ -537,14 +522,11 @@ static inline void rfv2_rotbox(rf_u64 *v0, rf_u64 *v1, uint8_t b0, uint8_t b1)
 	//---- low word ----       ---- high word ----
 	l   = *v0;                 h   = *v1;
 	l   = rf_rotr64(l, b0);    h   = rf_rotl64(h, b1);
-	rfv2_mix_fp_loss(&l, &h);
 	l  += rf_wltable(b0);      h  += rf_whtable(b1);
 	b0  = (uint8_t)l;          b1  = (uint8_t)h;
 	l   = rf_rotl64(l, b1);    h   = rf_rotr64(h, b0);
-	rfv2_mix_fp_loss(&l, &h);
 	b0  = (uint8_t)l;          b1  = (uint8_t)h;
 	l   = rf_rotr64(l, b1);    h   = rf_rotl64(h, b0);
-	rfv2_mix_fp_loss(&l, &h);
 	*v0 = l;                   *v1 = h;
 }
 
@@ -696,7 +678,10 @@ static inline void rfv2_pad256(rfv2_ctx_t *ctx)
 // finalize the hash and copy the result into _out_ if not null (256 bits)
 static inline void rfv2_final(void *out, rfv2_ctx_t *ctx)
 {
-	// always run 4 extra rounds to complete the last 128 bits
+	// always run 5 extra rounds to complete the last 128 bits.
+	// the 5th one is because the last processed block is only in
+	// the ctx and was not mixed yet.
+	rfv2_one_round(ctx);
 	rfv2_one_round(ctx);
 	rfv2_one_round(ctx);
 	rfv2_one_round(ctx);
@@ -706,18 +691,17 @@ static inline void rfv2_final(void *out, rfv2_ctx_t *ctx)
 		memcpy(out, ctx->hash.b, 32);
 }
 
-// apply a linear sine to a discrete integer to validate that the platform
-// operates a 100% compliant FP stack. Non-IEEE754 FPU will fail to provide
-// valid values for all inputs. In order to reduce the variations between
-// large and small values, we offset the value and put it to power 1/2. We
-// use sqrt(x) here instead of pow(x,0.5) because sqrt() usually is quite
-// optimized on CPUs and GPUs for vector length calculations while pow() is
-// generic and may be extremely slow. sqrt() on the other hand requires some
-// extra work to implement right on FPGAs and ASICs. The operation simply
-// becomes round(100*sqrt((sin(x/16)^3)+1)+1.5).
-static uint8_t sin_scaled(unsigned int x)
+// compute an integer-based rough approximation of 1+256*(abs(sin(x/16)^3)+1)
+// which does not depend on a floating point implementation. The period of the
+// input is 2^32.
+static unsigned int sin_scaled(unsigned int x)
 {
-	return round(100.0 * (sqrt(pow(sin(x / 16.0), 3) + 1.0)) + 1.5);
+	int i;
+
+	i = ((x * 42722829) >> 24) - 128;
+	x = 15 * i * i * abs(i);  // 0 to 15<<21
+	x = (x + (x >> 4)) >> 17;
+	return 257 - x;
 }
 
 // hash _len_ bytes from _in_ into _out_, using _seed_
@@ -752,6 +736,16 @@ int rfv2_hash2(void *out, const void *in, size_t len, void *rambox, const void *
 	ctx.rb_l = (ctx.rb_l / 2 - ctx.rb_o) * 2;
 
 	loops = sin_scaled(msgh);
+	if (loops >= 128)
+		ctx.left_bits = 4;
+	else if (loops >= 64)
+		ctx.left_bits = 3;
+	else if (loops >= 32)
+		ctx.left_bits = 2;
+	else if (loops >= 16)
+		ctx.left_bits = 1;
+	else
+		ctx.left_bits = 0;
 	for (loop = 0; loop < loops; loop++) {
 		rfv2_update(&ctx, in, len);
 		// pad to the next 256 bit boundary
@@ -782,4 +776,61 @@ int rfv2_hash2(void *out, const void *in, size_t len, void *rambox, const void *
 int rfv2_hash(void *out, const void *in, size_t len, void *rambox, const void *rambox_template)
 {
 	return rfv2_hash2(out, in, len, rambox, rambox_template, RFV2_INIT_CRC);
+}
+
+/* scans nonces from <min> to <max> applying them to message <msg> and stopping
+ * once a hash gives a result at least as good as <target>. It uses <rambox>,
+ * which must have been pre-initialized, and leaves the resulting hash in
+ * <hash> which must contain at least 32 bytes and be 32-bit aligned. It
+ * returns zero if no solution is found, otherwise 1. It only works with 32-bit
+ * aligned 80-byte block headers in big endian format and places the nonce in
+ * big endian format at the end of the message to hash it. In case of success,
+ * the caller has to extract the nonce from the message. It also stops if
+ * <stop> is non-NULL and the location it points to contains a non-null value
+ * (used to interrupt scanning by another thread).
+ */
+int rfv2_scan_hdr(char *msg, void *rambox, uint32_t *hash, uint32_t target, uint32_t min, uint32_t max, volatile char *stop)
+{
+	uint32_t msgh, msgh_init, nonce;
+	rfv2_ctx_t ctx;
+
+	// pre-compute the hash state based on the constant part of the header
+	msgh_init = rf_crc32_mem(0, msg, 76);
+
+	for (nonce = min;; nonce++) {
+		msg[76] = nonce >> 24;
+		msg[77] = nonce >> 16;
+		msg[78] = nonce >> 8;
+		msg[79] = nonce;
+
+		msgh = rf_crc32_mem(msgh_init, msg + 76, 4);
+		if (sin_scaled(msgh) != 2)
+			goto next;
+
+		rfv2_init(&ctx, RFV2_INIT_CRC, rambox);
+		ctx.changes = 65535; // mark the rambox read-only
+
+		ctx.rb_o = msgh % (ctx.rb_l / 2);
+		ctx.rb_l = (ctx.rb_l / 2 - ctx.rb_o) * 2;
+
+		/* first loop */
+		rfv2_update(&ctx, msg, 80);
+		rfv2_pad256(&ctx);
+
+		/* second loop */
+		rfv2_update(&ctx, msg, 80);
+		rfv2_pad256(&ctx);
+
+		/* final */
+		rfv2_final(hash, &ctx);
+
+		if (rf_le32toh((uint8_t *)(hash + 7)) <= target)
+			return 1;
+	next:
+		if (nonce == max)
+			return 0;
+
+		if (stop && *stop)
+			return 0;
+	}
 }
