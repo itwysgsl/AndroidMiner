@@ -1,41 +1,8 @@
-# BitZeny Miner for Android
+# Rainforest Miner for Android
 
-## Summary
-This is a BitZeny Miner for Android based on [cpuminer](https://github.com/bitzeny/cpuminer). cpuminer is modifed to work as a library through JNI.
+This is an Android miner with some minial changes to the UI that is built from BitZeny Miner for Android based on [cpuminer](https://github.com/bitzeny/cpuminer). Cpuminer is modifed to work as a library through JNI.
 
-## Environment
-NDK r17b
+Miner contain of the Rainforst v2 crypto currency algorithm. It is designed to rebalance the mining power towards the users and not the big corporations anymore. It achieves this by being extremely fast on modern 64-bit CPUs including low-power ones such as A53, still efficient though not as fast on GPUs, and not affordable to implement at all on FPGAs or ASICs. It makes intensive use of pseudo-random in-cache memory accesses and advanced instructions found in modern CPUs like AES, CRC, 64-bit divide, making
+set-top-boxes and smartphones as fast as high-end PCs and as fast as mid-end GPUs.
 
-## Library
-
-
-### Constructors
-
-
-```
-public BitZenyMiningLibrary()
-```
-```
-public BitZenyMiningLibrary(Handler handler)
-```
-
-Library `putString` log strings with 'log' tag. Applications can `getString` then use the log strings.
-
-
-### Methods
-
-```
-public boolean isMiningRunning()
-public int startMining(String url, String user, String password, int n_threads)
-public int startBenchmark(int n_threads)
-public int stopMining()
-```
-
-## Tips
-
-Library core uses submodule. Therefore, run below commands after clone;
-
-```
-git submodule init
-git submodule update
-```
+![](https://i.imgur.com/stXwjIU.png)

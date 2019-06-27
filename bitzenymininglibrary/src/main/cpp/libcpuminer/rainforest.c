@@ -69,12 +69,13 @@ int scanhash_rainforest(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	{
 		ret = rfv2_scan_hdr((char *)data, rambox, hash, Htarg, n, max_nonce, restart);
 		n = be32toh(data[19]);
-		if (!ret)
+		if (ret <= 0)
 			break;
 
 		if (fulltest(hash, ptarget)) {
 			pdata[19] = n;
-			*hashes_done = n - first_nonce + 1;
+			*hashes_done = ret;
+			ret = 1;
 			goto out;
 		} else {
 			printf("Warning: rfv2_scan_hdr() returned invalid solution %u\n", n);
@@ -84,7 +85,8 @@ int scanhash_rainforest(int thr_id, uint32_t *pdata, const uint32_t *ptarget,
 	} while (n < max_nonce && !work_restart[thr_id].restart);
 
 	pdata[19] = n;
-	*hashes_done = n - first_nonce + 1;
+	*hashes_done = -ret;
+	ret = 0;
 
 out:
 	return ret;
