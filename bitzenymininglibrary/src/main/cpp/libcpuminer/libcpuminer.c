@@ -103,12 +103,12 @@ struct workio_cmd {
 };
 
 enum algos {
-	ALGO_RAINFOREST,
+	ALGO_POWER2B,
 	ALGO_SHA256D,		/* SHA-256d */
 };
 
 static const char *algo_names[] = {
-	[ALGO_RAINFOREST]	= "power2b",
+	[ALGO_POWER2B]	= "power2b",
 	[ALGO_SHA256D]		= "sha256d",
 };
 
@@ -128,7 +128,7 @@ static int opt_retries = -1;
 static int opt_fail_pause = 30;
 int opt_timeout = 0;
 static int opt_scantime = 5;
-static enum algos opt_algo = ALGO_RAINFOREST;
+static enum algos opt_algo = ALGO_POWER2B;
 static int opt_scrypt_n = 1024;
 static int opt_n_threads;
 static int num_processors;
@@ -1001,7 +1001,10 @@ static void stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 		free(xnonce2str);
 	}
 
-	diff_to_target(work->target, sctx->job.diff);
+	if (opt_algo == ALGO_POWER2B)
+		diff_to_target(work->target, sctx->job.diff / 65536.0);
+	else
+		diff_to_target(work->target, sctx->job.diff);
 }
 
 static void *miner_thread(void *userdata)
@@ -1088,8 +1091,8 @@ static void *miner_thread(void *userdata)
 		max64 *= thr_hashrates[thr_id];
 		if (max64 <= 0) {
 			switch (opt_algo) {
-			case ALGO_RAINFOREST:
-				max64 = 0x1ff;
+			case ALGO_POWER2B:
+				max64 = 0x000fff;
 				break;
 			case ALGO_SHA256D:
 				max64 = 0x1fffff;
@@ -1106,7 +1109,7 @@ static void *miner_thread(void *userdata)
 
 		/* scan nonces for a proof-of-work hash */
 		switch (opt_algo) {
-		case ALGO_RAINFOREST:
+		case ALGO_POWER2B:
 			rc = scanhash_power2b(thr_id, work.data, work.target,
 					       max_nonce, &hashes_done);
 			break;
