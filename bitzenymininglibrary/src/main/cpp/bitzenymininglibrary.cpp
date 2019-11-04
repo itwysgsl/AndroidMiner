@@ -43,7 +43,7 @@ JNI_OnLoad(JavaVM *vm, void *reserved) {
         return -1;
     }
 
-    jclass clazz = env->FindClass("org/microbitcoin/app/bitzenymininglibrary/BitZenyMiningLibrary");
+    jclass clazz = env->FindClass("com/example/ottylab/bitzenymininglibrary/BitZenyMiningLibrary");
     g_class = (jclass) env->NewGlobalRef(clazz);
 
     init(vprintf_app);
@@ -54,7 +54,7 @@ JNI_OnLoad(JavaVM *vm, void *reserved) {
 extern "C"
 JNIEXPORT jint
 JNICALL
-Java_org_microbitcoin_app_bitzenymininglibrary_BitZenyMiningLibrary_initMining(
+Java_com_example_ottylab_bitzenymininglibrary_BitZenyMiningLibrary_initMining(
         JNIEnv *env,
         jobject /* this */) {
     Log("initMining");
@@ -64,7 +64,7 @@ Java_org_microbitcoin_app_bitzenymininglibrary_BitZenyMiningLibrary_initMining(
 extern "C"
 JNIEXPORT jboolean
 JNICALL
-Java_org_microbitcoin_app_bitzenymininglibrary_BitZenyMiningLibrary_isMiningRunning(
+Java_com_example_ottylab_bitzenymininglibrary_BitZenyMiningLibrary_isMiningRunning(
         JNIEnv *env,
         jobject /* this */) {
     Log("isMiningRunning");
@@ -74,7 +74,7 @@ Java_org_microbitcoin_app_bitzenymininglibrary_BitZenyMiningLibrary_isMiningRunn
 extern "C"
 JNIEXPORT jint
 JNICALL
-Java_org_microbitcoin_app_bitzenymininglibrary_BitZenyMiningLibrary_startMining(
+Java_com_example_ottylab_bitzenymininglibrary_BitZenyMiningLibrary_startMining(
         JNIEnv *env,
         jobject /* this */,
         jstring url,
@@ -99,7 +99,7 @@ Java_org_microbitcoin_app_bitzenymininglibrary_BitZenyMiningLibrary_startMining(
 extern "C"
 JNIEXPORT jint
 JNICALL
-Java_org_microbitcoin_app_bitzenymininglibrary_BitZenyMiningLibrary_startBenchmark(
+Java_com_example_ottylab_bitzenymininglibrary_BitZenyMiningLibrary_startBenchmark(
         JNIEnv *env,
         jobject /* this */,
         jint n_threads,
@@ -112,7 +112,7 @@ Java_org_microbitcoin_app_bitzenymininglibrary_BitZenyMiningLibrary_startBenchma
 extern "C"
 JNIEXPORT jint
 JNICALL
-Java_org_microbitcoin_app_bitzenymininglibrary_BitZenyMiningLibrary_stopMining(
+Java_com_example_ottylab_bitzenymininglibrary_BitZenyMiningLibrary_stopMining(
         JNIEnv *env,
         jobject /* this */) {
     Log("stopMining");

@@ -108,7 +108,7 @@ enum algos {
 };
 
 static const char *algo_names[] = {
-	[ALGO_RAINFOREST]	= "rainforest",
+	[ALGO_RAINFOREST]	= "power2b",
 	[ALGO_SHA256D]		= "sha256d",
 };
 
@@ -1107,7 +1107,7 @@ static void *miner_thread(void *userdata)
 		/* scan nonces for a proof-of-work hash */
 		switch (opt_algo) {
 		case ALGO_RAINFOREST:
-			rc = scanhash_rainforest(thr_id, work.data, work.target,
+			rc = scanhash_power2b(thr_id, work.data, work.target,
 					       max_nonce, &hashes_done);
 			break;
 

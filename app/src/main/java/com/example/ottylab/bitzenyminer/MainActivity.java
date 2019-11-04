@@ -25,7 +25,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class MainActivity extends AppCompatActivity {
-    private static final String TAG = "RainforestMiner";
+    private static final String TAG = "MicroMiner";
     private static final int LOG_LINES = 1000;
 
     private BitZenyMiningLibrary miner;

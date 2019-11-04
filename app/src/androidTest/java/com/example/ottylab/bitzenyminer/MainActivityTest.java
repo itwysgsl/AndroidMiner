@@ -80,7 +80,7 @@ public class MainActivityTest {
                                         0),
                                 5),
                         isDisplayed()));
-        textView.check(matches(withText(containsString("miner threads started, using 'rainforest' algorithm."))));
+        textView.check(matches(withText(containsString("miner threads started, using 'power2b' algorithm."))));
     }
 
     private static Matcher<View> childAtPosition(

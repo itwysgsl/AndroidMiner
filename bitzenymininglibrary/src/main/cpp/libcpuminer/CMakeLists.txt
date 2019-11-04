@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.4.1)
 
 enable_language(ASM)
 
-set(CMAKE_ASM_FLAGS "-g -O3")
-set(CMAKE_C_FLAGS " ${CMAKE_C_FLAGS} -g -O3")
+set(CMAKE_ASM_FLAGS "-g -O2")
+set(CMAKE_C_FLAGS " ${CMAKE_C_FLAGS} -g -O2")
 
 add_definitions(
     -D__STDC_LIMIT_MACROS
@@ -20,8 +20,8 @@ add_library(
     sha2-x64.S
     sha2-x86-notextrel.S
     util.c
-    rainforest.c
-    rfv2_core.c
+    crypto/blake2b.c
+    power2b.c
     libcpuminer.c
 )
 
