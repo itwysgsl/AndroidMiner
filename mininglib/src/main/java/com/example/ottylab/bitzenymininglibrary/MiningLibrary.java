@@ -1,14 +1,14 @@
-package com.example.ottylab.bitzenymininglibrary;
+package com.example.ottylab.mininglib;
 
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 
-public class BitZenyMiningLibrary {
-    private static final String TAG = "BitZenyMiningLibrary";
+public class MiningLibrary {
+    private static final String TAG = "MiningLibrary";
 
     static {
-        System.loadLibrary("bitzenymininglibrary");
+        System.loadLibrary("mininglib");
     }
 
     public enum Algorithm {
@@ -18,8 +18,8 @@ public class BitZenyMiningLibrary {
 
     private static Handler sHandler;
 
-    public BitZenyMiningLibrary() {}
-    public BitZenyMiningLibrary(Handler handler) {
+    public MiningLibrary() {}
+    public MiningLibrary(Handler handler) {
         sHandler = handler;
     }
     public int startMining(String url, String user, String password, int n_threads, Algorithm algo) {

@@ -4,16 +4,16 @@ cmake_minimum_required(VERSION 3.4.1)
 add_subdirectory(${CMAKE_SOURCE_DIR}/src/main/cpp/libcpuminer)
 
 add_library(
-    bitzenymininglibrary
+    mininglib
     SHARED
-    src/main/cpp/bitzenymininglibrary.cpp)
+    src/main/cpp/mininglib.cpp)
 
 find_library(
     log-lib
     log)
 
 target_link_libraries(
-    bitzenymininglibrary
+    mininglib
     ${log-lib}
     cpuminer)
 

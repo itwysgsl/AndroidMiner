@@ -1,4 +1,4 @@
-package com.example.ottylab.bitzenymininglibrary;
+package com.example.ottylab.mininglib;
 
 import org.junit.Test;
 

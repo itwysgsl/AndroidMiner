@@ -18,7 +18,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.example.ottylab.bitzenymininglibrary.BitZenyMiningLibrary;
+import com.example.ottylab.mininglib.MiningLibrary;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.BlockingQueue;
@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MicroMiner";
     private static final int LOG_LINES = 1000;
 
-    private BitZenyMiningLibrary miner;
+    private MiningLibrary miner;
 
     private EditText editTextServer;
     private EditText editTextUser;
@@ -71,7 +71,7 @@ public class MainActivity extends AppCompatActivity {
         showDeviceInfo();
 
         sHandler = new JNICallbackHandler(this);
-        miner = new BitZenyMiningLibrary(sHandler);
+        miner = new MiningLibrary(sHandler);
 
         editTextServer = (EditText) findViewById(R.id.editTextServer);
         editTextServer.setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -119,9 +119,9 @@ public class MainActivity extends AppCompatActivity {
                         n_threads = Integer.parseInt(editTextNThreads.getText().toString());
                     } catch (NumberFormatException e){}
 
-                    BitZenyMiningLibrary.Algorithm algorithm =
+                    MiningLibrary.Algorithm algorithm =
                             spinnerAlgorithm.getSelectedItemPosition() == 0 ?
-                                    BitZenyMiningLibrary.Algorithm.YESCRYPT : BitZenyMiningLibrary.Algorithm.YESPOWER;
+                                    MiningLibrary.Algorithm.YESCRYPT : MiningLibrary.Algorithm.YESPOWER;
                     if (checkBoxBenchmark.isChecked()) {
                         miner.startBenchmark(n_threads, algorithm);
                     } else {
