@@ -1,4 +1,4 @@
-package com.example.ottylab.mininglib;
+package org.microbitcoin.mininglib;
 
 import android.os.Bundle;
 import android.os.Handler;

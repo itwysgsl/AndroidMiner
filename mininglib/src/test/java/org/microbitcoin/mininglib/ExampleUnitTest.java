@@ -1,4 +1,4 @@
-package com.example.ottylab.mininglib;
+package org.microbitcoin.mininglib;
 
 import org.junit.Test;
 

@@ -1,4 +1,4 @@
-package com.example.ottylab.bitzenyminer;
+package org.microbitcoin.microminer;
 
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -18,7 +18,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import com.example.ottylab.mininglib.MiningLibrary;
+import org.microbitcoin.mininglib.MiningLibrary;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.BlockingQueue;

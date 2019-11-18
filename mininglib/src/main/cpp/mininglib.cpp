@@ -43,7 +43,7 @@ JNI_OnLoad(JavaVM *vm, void *reserved) {
         return -1;
     }
 
-    jclass clazz = env->FindClass("com/example/ottylab/mininglib/MiningLibrary");
+    jclass clazz = env->FindClass("org/microbitcoin/mininglib/MiningLibrary");
     g_class = (jclass) env->NewGlobalRef(clazz);
 
     init(vprintf_app);
@@ -54,7 +54,7 @@ JNI_OnLoad(JavaVM *vm, void *reserved) {
 extern "C"
 JNIEXPORT jint
 JNICALL
-Java_com_example_ottylab_mininglib_MiningLibrary_initMining(
+Java_org_microbitcoin_mininglib_MiningLibrary_initMining(
         JNIEnv *env,
         jobject /* this */) {
     Log("initMining");
@@ -64,7 +64,7 @@ Java_com_example_ottylab_mininglib_MiningLibrary_initMining(
 extern "C"
 JNIEXPORT jboolean
 JNICALL
-Java_com_example_ottylab_mininglib_MiningLibrary_isMiningRunning(
+Java_org_microbitcoin_mininglib_MiningLibrary_isMiningRunning(
         JNIEnv *env,
         jobject /* this */) {
     Log("isMiningRunning");
@@ -74,7 +74,7 @@ Java_com_example_ottylab_mininglib_MiningLibrary_isMiningRunning(
 extern "C"
 JNIEXPORT jint
 JNICALL
-Java_com_example_ottylab_mininglib_MiningLibrary_startMining(
+Java_org_microbitcoin_mininglib_MiningLibrary_startMining(
         JNIEnv *env,
         jobject /* this */,
         jstring url,
@@ -99,7 +99,7 @@ Java_com_example_ottylab_mininglib_MiningLibrary_startMining(
 extern "C"
 JNIEXPORT jint
 JNICALL
-Java_com_example_ottylab_mininglib_MiningLibrary_startBenchmark(
+Java_org_microbitcoin_mininglib_MiningLibrary_startBenchmark(
         JNIEnv *env,
         jobject /* this */,
         jint n_threads,
@@ -112,7 +112,7 @@ Java_com_example_ottylab_mininglib_MiningLibrary_startBenchmark(
 extern "C"
 JNIEXPORT jint
 JNICALL
-Java_com_example_ottylab_mininglib_MiningLibrary_stopMining(
+Java_org_microbitcoin_mininglib_MiningLibrary_stopMining(
         JNIEnv *env,
         jobject /* this */) {
     Log("stopMining");

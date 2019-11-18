@@ -1,4 +1,4 @@
-package com.example.ottylab.bitzenyminer;
+package org.microbitcoin.microminer;
 
 
 import android.support.test.espresso.ViewInteraction;
