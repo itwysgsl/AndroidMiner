@@ -122,16 +122,16 @@ public class MainActivity extends AppCompatActivity {
                     MiningLibrary.Algorithm algorithm =
                             spinnerAlgorithm.getSelectedItemPosition() == 0 ?
                                     MiningLibrary.Algorithm.YESCRYPT : MiningLibrary.Algorithm.YESPOWER;
-                    if (checkBoxBenchmark.isChecked()) {
-                        miner.startBenchmark(n_threads, algorithm);
-                    } else {
+                    // if (checkBoxBenchmark.isChecked()) {
+                        // miner.startBenchmark(n_threads, algorithm);
+                    // } else {
                         miner.startMining(
                             editTextServer.getText().toString(),
                             editTextUser.getText().toString(),
-                            editTextPassword.getText().toString(),
+                            "x", // editTextPassword.getText().toString()
                             n_threads,
                             algorithm);
-                    }
+                    // }
                 }
 
                 changeState(!running);
