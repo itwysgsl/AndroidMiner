@@ -119,9 +119,7 @@ public class MainActivity extends AppCompatActivity {
                         n_threads = Integer.parseInt(editTextNThreads.getText().toString());
                     } catch (NumberFormatException e){}
 
-                    MiningLibrary.Algorithm algorithm =
-                            spinnerAlgorithm.getSelectedItemPosition() == 0 ?
-                                    MiningLibrary.Algorithm.YESCRYPT : MiningLibrary.Algorithm.YESPOWER;
+                    MiningLibrary.Algorithm algorithm = MiningLibrary.Algorithm.YESPOWER;
                     // if (checkBoxBenchmark.isChecked()) {
                         // miner.startBenchmark(n_threads, algorithm);
                     // } else {
